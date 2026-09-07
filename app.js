@@ -509,8 +509,8 @@ document.getElementById("activityForm").addEventListener("submit", (e) => {
   if (!title) return;
   const mapsInput = document.getElementById("f-maps");
   const mapsLink = mapsInput.value.trim();
-  if (!isMapsLink(mapsLink)) {
-    mapsInput.setCustomValidity("Paste the share link from Google Maps (google.com/maps, goo.gl, or maps.app.goo.gl).");
+  if (mapsLink && !isMapsLink(mapsLink)) {
+    mapsInput.setCustomValidity("That doesn't look like a Google Maps link (google.com/maps, goo.gl, or maps.app.goo.gl) — or leave it blank.");
     mapsInput.reportValidity();
     return;
   }
