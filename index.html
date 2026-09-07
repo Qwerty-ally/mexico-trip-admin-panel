@@ -213,6 +213,12 @@ a { color: var(--lagoon); }
 }
 .cat-option .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cat-color); }
 .cat-option.active { border-color: var(--cat-color); background: color-mix(in srgb, var(--cat-color) 20%, var(--surface)); color: var(--ink); }
+.choice-picker { display: flex; gap: 7px; }
+.choice-option {
+  flex: 1; border: 1.5px solid var(--line); background: var(--surface-alt); border-radius: 999px;
+  padding: 8px 12px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+}
+.choice-option.active { border-color: var(--lagoon); background: color-mix(in srgb, var(--lagoon) 20%, var(--surface)); color: var(--ink); }
 .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
 .modal-actions .btn-primary, .modal-actions .btn-ghost, .modal-actions .btn-danger { flex: 1; }
 .meta-line { font-size: 12px; color: var(--ink-faint); margin: -6px 0 16px; }
@@ -357,6 +363,14 @@ a { color: var(--lagoon); }
       <label>Google Maps link <span class="req">*</span></label>
       <input type="url" id="f-maps" placeholder="Paste the share link from Google Maps" required />
       <div class="field-hint">Required — this is what shows as "Open in Google Maps" on the card.</div>
+    </div>
+    <div class="field">
+      <label>Compared to bishops <span class="req">*</span></label>
+      <div class="choice-picker" id="bishopsPicker">
+        <button type="button" class="choice-option" data-bishops="less">Less</button>
+        <button type="button" class="choice-option" data-bishops="equal">Equal</button>
+        <button type="button" class="choice-option" data-bishops="more">More</button>
+      </div>
     </div>
     <div class="field">
       <label>Details (optional)</label>

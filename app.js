@@ -67,6 +67,11 @@ function isMapsLink(url) {
   if (!/^https?:\/\//i.test(url)) return false;
   return /google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\./i.test(url);
 }
+const CREDIT_SUFFIX = " (With Ray Fair's credit card)";
+function applyBishopsSuffix(title, choice) {
+  const base = title.endsWith(CREDIT_SUFFIX) ? title.slice(0, -CREDIT_SUFFIX.length) : title;
+  return choice === "more" || choice === "equal" ? base + CREDIT_SUFFIX : base;
+}
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -364,6 +369,15 @@ catPicker.addEventListener("click", (e) => {
 const daySelectEl = document.getElementById("f-day");
 daySelectEl.innerHTML = DAYS.map((d) => `<option value="${d.date}">${d.dow}, ${d.month} ${d.num}${d.tag ? " — " + d.tag : ""}</option>`).join("");
 
+const bishopsPicker = document.getElementById("bishopsPicker");
+let bishopsChoice = null;
+bishopsPicker.addEventListener("click", (e) => {
+  const opt = e.target.closest(".choice-option");
+  if (!opt) return;
+  bishopsChoice = opt.dataset.bishops;
+  [...bishopsPicker.children].forEach((el) => el.classList.toggle("active", el === opt));
+});
+
 function openModal() {
   document.getElementById("modalScrim").classList.add("open");
   document.getElementById("activityModal").classList.add("open");
@@ -387,6 +401,8 @@ function openModalForAdd() {
   selectedCat = CATEGORIES[0].id;
   [...catPicker.children].forEach((el, i) => el.classList.toggle("active", i === 0));
   daySelectEl.value = DAYS[0].date;
+  bishopsChoice = null;
+  [...bishopsPicker.children].forEach((el) => el.classList.remove("active"));
   openModal();
 }
 document.getElementById("addActivityBtn").addEventListener("click", openModalForAdd);
@@ -425,6 +441,8 @@ function openModalForEdit(id) {
   document.getElementById("f-location").value = a.location || "";
   document.getElementById("f-maps").value = a.mapsLink || "";
   document.getElementById("f-maps").setCustomValidity("");
+  bishopsChoice = a.bishopsChoice || null;
+  [...bishopsPicker.children].forEach((el) => el.classList.toggle("active", el.dataset.bishops === bishopsChoice));
   document.getElementById("f-notes").value = a.notes || "";
   renderModComments(a);
   openModal();
@@ -498,13 +516,19 @@ document.getElementById("activityForm").addEventListener("submit", (e) => {
   }
   mapsInput.setCustomValidity("");
 
+  if (!bishopsChoice) {
+    showToast("Pick less, equal, or more (vs. bishops)");
+    return;
+  }
+
   const data = {
-    title,
+    title: applyBishopsSuffix(title, bishopsChoice),
     category: selectedCat,
     day: daySelectEl.value,
     time: document.getElementById("f-time").value || "",
     location: document.getElementById("f-location").value.trim(),
     mapsLink,
+    bishopsChoice,
     notes: document.getElementById("f-notes").value.trim(),
   };
   const saveBtn = document.getElementById("modalSave");
