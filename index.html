@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Trip Control</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#071019" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060d14;
+  --surface: #0d1b24;
+  --surface-alt: #12242f;
+  --surface-raised: #16303e;
+  --ink: #eaf6f3;
+  --ink-soft: #9dc0c7;
+  --ink-faint: #587880;
+  --line: #1c333c;
+  --lagoon: #2de3c8;
+  --lagoon-ink: #04241d;
+  --hibiscus: #ff3d9a;
+  --hibiscus-ink: #330019;
+  --mango: #ffb238;
+  --mango-ink: #2c1900;
+  --violet: #b98bff;
+  --sky: #38c6ff;
+  --danger: #ff5252;
+  --danger-ink: #350000;
+  --shadow: 0 20px 44px rgba(0,0,0,0.45), 0 4px 12px rgba(0,0,0,0.3);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 12% -6%, rgba(45,227,200,0.16), transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(255,61,154,0.14), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(255,178,56,0.08), transparent 50%);
+  background-attachment: fixed;
+}
+h1, h2, h3 { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; margin: 0; text-wrap: balance; }
+button { font: inherit; cursor: pointer; }
+input, textarea, select { font: inherit; }
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+a { color: var(--lagoon); }
+[hidden] { display: none !important; }
+
+/* ── Lock screen ──────────────────────────────────────────────────── */
+.lock {
+  min-height: 100vh; display: grid; place-items: center; padding: 24px;
+}
+.lock-card {
+  width: 100%; max-width: 340px; text-align: center;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 22px; padding: 34px 28px; box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.lock-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% -20%, rgba(45,227,200,0.22), transparent 60%);
+  pointer-events: none;
+}
+.lock-badge {
+  width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 14px;
+  background: linear-gradient(155deg, var(--lagoon), var(--sky));
+  display: grid; place-items: center; font-size: 26px;
+  box-shadow: 0 10px 24px rgba(45,227,200,0.35);
+}
+.lock-card h1 { font-size: 21px; letter-spacing: -0.01em; }
+.lock-card p { color: var(--ink-faint); font-size: 12.5px; margin: 6px 0 22px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.lock-card input {
+  width: 100%; background: var(--surface-alt); border: 1.5px solid var(--line);
+  color: var(--ink); border-radius: 12px; padding: 13px 15px; text-align: center;
+  letter-spacing: 0.06em; margin-bottom: 12px;
+}
+.lock-card input:focus { outline: none; border-color: var(--lagoon); }
+.lock-card button {
+  width: 100%; background: var(--lagoon); color: var(--lagoon-ink); border: none;
+  border-radius: 12px; padding: 13px; font-weight: 800; font-size: 15px;
+}
+.lock-error {
+  margin-top: 14px; color: var(--hibiscus); font-size: 12.5px; font-weight: 700;
+}
+.shake { animation: shake 0.4s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+
+/* ── Shell ────────────────────────────────────────────────────────── */
+.dash { max-width: 1080px; margin: 0 auto; padding: 20px 20px 60px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+.brand { font-family: "Bricolage Grotesque", sans-serif; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.topbar .sub { font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; }
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.conn-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-faint); box-shadow: 0 0 0 3px transparent; }
+.conn-dot.on { background: var(--lagoon); box-shadow: 0 0 0 3px rgba(45,227,200,0.2); }
+.conn-dot.off { background: var(--mango); box-shadow: 0 0 0 3px rgba(255,178,56,0.2); }
+.conn-label { font-size: 11.5px; color: var(--ink-faint); font-weight: 600; }
+.lock-btn {
+  background: var(--surface-alt); border: 1px solid var(--line); color: var(--ink-soft);
+  border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700;
+}
+
+/* ── Stats ────────────────────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 14px;
+}
+.stat-card .label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); }
+.stat-card .value { font-family: "Bricolage Grotesque", sans-serif; font-size: 26px; font-weight: 800; margin-top: 6px; color: var(--lagoon); }
+.stat-card .value.small { font-size: 15px; color: var(--ink); font-family: "Sora", sans-serif; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Tabs ─────────────────────────────────────────────────────────── */
+.tabs { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; }
+.tab {
+  flex: none; background: var(--surface); border: 1px solid var(--line); color: var(--ink-soft);
+  padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: 13px;
+}
+.tab.active { background: var(--lagoon); border-color: var(--lagoon); color: var(--lagoon-ink); }
+.tab.danger-tab.active { background: var(--danger); border-color: var(--danger); color: #2b0000; }
+
+/* ── Panels / tables ──────────────────────────────────────────────── */
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.btn-primary { background: var(--lagoon); color: var(--lagoon-ink); border: none; border-radius: 11px; padding: 11px 18px; font-weight: 800; font-size: 13.5px; }
+.btn-ghost { background: var(--surface-alt); color: var(--ink); border: 1px solid var(--line); border-radius: 11px; padding: 11px 18px; font-weight: 700; font-size: 13.5px; }
+.btn-danger { background: var(--danger); color: var(--danger-ink); border: none; border-radius: 11px; padding: 11px 18px; font-weight: 800; font-size: 13.5px; }
+.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.table { width: 100%; border-collapse: collapse; min-width: 620px; }
+.table th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--ink-faint); font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--line);
+}
+.table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 13.5px; }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--surface-alt); }
+.cell-title { font-weight: 700; }
+.cell-sub { color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); }
+.row-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-alt);
+  color: var(--ink-soft); display: grid; place-items: center;
+}
+.icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+.empty-note { padding: 34px 16px; text-align: center; color: var(--ink-faint); font-size: 13.5px; }
+
+/* ── Leaderboard ──────────────────────────────────────────────────── */
+.leaderboard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lb-row {
+  display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 16px;
+}
+.lb-rank { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-weight: 800; color: var(--ink-faint); width: 30px; text-align: center; flex: none; }
+.lb-row.r1 .lb-rank { color: var(--mango); font-size: 22px; }
+.lb-row.r2 .lb-rank { color: #c9d3d6; }
+.lb-row.r3 .lb-rank { color: #d79b6a; }
+.lb-body { flex: 1; min-width: 0; }
+.lb-title { font-weight: 700; }
+.lb-meta { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+.lb-votes { flex: none; text-align: right; }
+.lb-votes .n { font-family: "IBM Plex Mono", monospace; font-size: 18px; font-weight: 700; color: var(--hibiscus); }
+.lb-votes .u { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ── Danger zone ──────────────────────────────────────────────────── */
+.danger-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 14px;
+}
+.danger-card h3 { font-size: 15px; margin-bottom: 4px; }
+.danger-card p { color: var(--ink-faint); font-size: 13px; margin: 0 0 14px; }
+.danger-card.hot { border-color: rgba(255,82,82,0.35); }
+.reset-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.reset-row input {
+  flex: 1; min-width: 160px; background: var(--surface-alt); border: 1.5px solid var(--line);
+  color: var(--ink); border-radius: 10px; padding: 11px 13px;
+}
+
+/* ── Modal ────────────────────────────────────────────────────────── */
+.modal-scrim {
+  position: fixed; inset: 0; background: rgba(2,6,10,0.6); backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none; transition: opacity 0.16s ease; z-index: 60;
+}
+.modal-scrim.open { opacity: 1; pointer-events: auto; }
+.modal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -46%); width: min(560px, 92vw);
+  max-height: 86vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; box-shadow: var(--shadow); padding: 22px 22px 24px; z-index: 61;
+  opacity: 0; pointer-events: none; transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+.modal h3 { font-size: 19px; margin-bottom: 16px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 6px; }
+.field label .req { color: var(--hibiscus); }
+.field input, .field select, .field textarea {
+  width: 100%; border: 1px solid var(--line); background: var(--surface-alt);
+  border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--ink); resize: vertical;
+}
+.field textarea { min-height: 60px; }
+.field-hint { font-size: 11px; color: var(--ink-faint); margin-top: 5px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cat-picker { display: flex; gap: 7px; flex-wrap: wrap; }
+.cat-option {
+  border: 1.5px solid var(--line); background: var(--surface-alt); border-radius: 999px;
+  padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft);
+  display: flex; align-items: center; gap: 6px;
+}
+.cat-option .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cat-color); }
+.cat-option.active { border-color: var(--cat-color); background: color-mix(in srgb, var(--cat-color) 20%, var(--surface)); color: var(--ink); }
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+.modal-actions .btn-primary, .modal-actions .btn-ghost, .modal-actions .btn-danger { flex: 1; }
+.meta-line { font-size: 12px; color: var(--ink-faint); margin: -6px 0 16px; }
+.mod-comments { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 14px; }
+.mod-comments h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 10px; }
+.mod-comment { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.mod-comment:last-child { border-bottom: none; }
+.mod-comment .who { font-weight: 700; font-size: 12.5px; }
+.mod-comment .txt { color: var(--ink-soft); font-size: 13px; margin-top: 1px; }
+.mod-comment button { flex: none; background: none; border: none; color: var(--ink-faint); }
+.mod-comment button:hover { color: var(--danger); }
+
+.toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px);
+  background: var(--surface-raised); border: 1px solid var(--line); color: var(--ink); padding: 11px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
+  transition: all 0.2s ease; z-index: 70; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 620px) {
+  .row-2 { grid-template-columns: 1fr; }
+  .modal { width: 94vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-scrim, .toast { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="lock" id="lockScreen">
+  <div class="lock-card" id="lockCard">
+    <div class="lock-badge">🌺</div>
+    <h1>Trip Control</h1>
+    <p>Admin access only</p>
+    <input type="password" id="pwInput" placeholder="Password" autocomplete="off" />
+    <button id="unlockBtn">Enter</button>
+    <div class="lock-error" id="lockError" hidden>Wrong password — try again.</div>
+  </div>
+</div>
+
+<div class="dash" id="dash" hidden>
+  <header class="topbar">
+    <div>
+      <div class="brand">🌺 Mission Control</div>
+      <div class="sub">Mexico trip · Sat Dec 27 – Fri Jan 1</div>
+    </div>
+    <div class="top-actions">
+      <span class="conn-dot" id="connDot"></span>
+      <span class="conn-label mono" id="connLabel">connecting…</span>
+      <button class="lock-btn" id="lockBtn">🔒 Lock</button>
+    </div>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="activities">Activities</button>
+    <button class="tab" data-tab="leaderboard">🔥 Leaderboard</button>
+    <button class="tab" data-tab="attendance">Attendance</button>
+    <button class="tab danger-tab" data-tab="danger">⚠ Danger zone</button>
+  </nav>
+
+  <main>
+    <section class="panel" id="panel-activities">
+      <div class="panel-head">
+        <h2>All activities</h2>
+        <button class="btn-primary" id="addActivityBtn">+ Add activity</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>When</th><th>Category</th><th>Activity</th><th>Votes</th><th>RSVPs</th><th>Comments</th><th></th></tr>
+          </thead>
+          <tbody id="activitiesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-leaderboard" hidden>
+      <div class="panel-head"><h2>Leaderboard — ranked by votes</h2></div>
+      <ol class="leaderboard" id="leaderboardList"></ol>
+    </section>
+
+    <section class="panel" id="panel-attendance" hidden>
+      <div class="panel-head"><h2>Who's doing what</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Person</th><th>Going</th><th>Maybe</th><th>Can't</th><th>Voted for</th><th>Comments</th></tr></thead>
+          <tbody id="attendanceBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-danger" hidden>
+      <div class="danger-card">
+        <h3>Export a backup</h3>
+        <p>Download every activity, RSVP, vote, and comment as a JSON file.</p>
+        <button class="btn-ghost" id="exportBtn">⬇ Export JSON</button>
+      </div>
+      <div class="danger-card hot">
+        <h3>Reset all trip data</h3>
+        <p>Permanently deletes every activity for this trip — RSVPs, votes, and comments included. This cannot be undone.</p>
+        <div class="reset-row">
+          <input type="text" id="resetConfirm" placeholder="Type RESET to confirm" />
+          <button class="btn-danger" id="resetBtn" disabled>Delete everything</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-scrim" id="modalScrim"></div>
+<div class="modal" id="activityModal">
+  <h3 id="modalTitle">Add activity</h3>
+  <div class="meta-line" id="modalMeta" hidden></div>
+  <form id="activityForm">
+    <div class="field">
+      <label>What is it?</label>
+      <input type="text" id="f-title" maxlength="80" required />
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <div class="cat-picker" id="catPicker"></div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Day</label>
+        <select id="f-day"></select>
+      </div>
+      <div class="field">
+        <label>Time (optional)</label>
+        <input type="time" id="f-time" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Where</label>
+      <input type="text" id="f-location" maxlength="80" />
+    </div>
+    <div class="field">
+      <label>Google Maps link <span class="req">*</span></label>
+      <input type="url" id="f-maps" placeholder="Paste the share link from Google Maps" required />
+      <div class="field-hint">Required — this is what shows as "Open in Google Maps" on the card.</div>
+    </div>
+    <div class="field">
+      <label>Details (optional)</label>
+      <textarea id="f-notes" maxlength="400"></textarea>
+    </div>
+
+    <div class="mod-comments" id="modComments" hidden>
+      <h4>Comments</h4>
+      <div id="modCommentList"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="modalCancel">Cancel</button>
+      <button type="button" class="btn-danger" id="modalDelete" hidden>Delete</button>
+      <button type="submit" class="btn-primary" id="modalSave">Save</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
